@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class Referencer : MonoBehaviour {
 	[SerializeField]
 	private List<GameObject> gameObjectList = new List<GameObject>();
+	public GUIStyle TextStyle = new GUIStyle();
 
 	public GameObject getGameObject(string name)
 	{

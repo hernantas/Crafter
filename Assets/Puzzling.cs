@@ -50,15 +50,35 @@ public class Puzzling : MonoBehaviour
 	private GameObject blockerTemplate;
 	private int latestMarkX = -1;
 	private int latestMarkY = -1;
+	private List<GameObject> displayCollected;
+	private List<int> totalCollected = new List<int>();
+	private List<GameObject> movingCollected = new List<GameObject>();
+	private GUIStyle textScore;
+	private GUIStyle textCollected;
 
 	void OnGUI()
 	{
-		GUI.Label(new Rect(Screen.width/2-100,Screen.height/4,100,32), maxTurn.ToString());
+		for (int i=0;i<totalCollected.Count;i++)
+		{
+			GUI.Label(new Rect(i*74+35,16,50,32), 
+			          totalCollected[i].ToString(), 
+			          textCollected);
+		}
+
+		GUI.Label(new Rect(Screen.width/2-23,Screen.height/4,50,32), 
+		          maxTurn.ToString(), 
+		          textScore);
 	}
 
 	// Use this for initialization
 	void Start () 
 	{
+		textScore = new GUIStyle(StaticReference.Get().TextStyle);
+		textScore.fontSize = 32;
+		textScore.fontStyle = FontStyle.Bold;
+		textCollected = new GUIStyle(StaticReference.Get().TextStyle);
+		textCollected.normal.textColor = new Color(0,0,0);
+
 		gridList = new List<List<GridInfo>> (5);
 		markList = new List<List<bool>> (5);
 
@@ -90,14 +110,27 @@ public class Puzzling : MonoBehaviour
 				gridList[i][j].collider = go;
 			}
 		}
+
+		// Create collected
+		Vector3 dOffset = new Vector3(-2.3f,4.7f,0);
+		displayCollected = new List<GameObject>();
+		for (int i=0;i<farmList.Count;i++)
+		{
+			GameObject go = (GameObject)Instantiate(farmList[i].go,
+			                                        new Vector3(i*1.2f,0,0)+dOffset,
+			                                        Quaternion.identity);
+			go.transform.parent = this.transform;
+			go.name = farmList[i].go.name;
+			displayCollected.Add(go);
+			totalCollected.Add(0);
+		}
 	}
 	
 	// Update is called once per frame
 	void Update () 
 	{
-		RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
-
-		Vector3 offset = new Vector3 (-2.14f,0.5f);
+		RaycastHit2D hit = Physics2D.Raycast(
+			Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 
 		for(int i=gridList.Count-1;i>=0;i--)
 		{
@@ -107,34 +140,29 @@ public class Puzzling : MonoBehaviour
 				{
 					if (i > 0 && gridList[i-1][j].gameObject != null)
 					{
-						gridList[i][j].gameObject = gridList[i-1][j].gameObject;
-						gridList[i][j].gameObject.transform.position = new Vector3(j*0.85f, i*-0.85f, 1)+offset;
-						gridList[i-1][j].gameObject = null;
+						PushToBottom(i, j);
 					}
 				}
 				else
 				{
-					if (hit.transform != null && 
+					if ((hit.transform != null && 
 					    hit.transform.gameObject == gridList[i][j].collider &&
-					    (latestMarkX != i || latestMarkY != j) &&
-					    Input.GetMouseButton(0))
+					    (latestMarkX != i || latestMarkY != j) && Input.GetMouseButton(0)) 
+					    && 
+					    ((latestMarkX == -1 && latestMarkY == -1) ||
+					    (!markList[i][j] && Mathf.RoundToInt(Mathf.Abs(latestMarkX-i)) <= 1 &&
+					 	Mathf.RoundToInt(Mathf.Abs(latestMarkY-j)) <= 1 &&
+						gridList[i][j].gameObject.name == gridList[latestMarkX][latestMarkY].gameObject.name)))
 					{
-						if ((latestMarkX == -1 && latestMarkY == -1) ||
-						    (!markList[i][j] &&
-						 	 Mathf.RoundToInt(Mathf.Abs(latestMarkX-i)) <= 1 &&
-						 	 Mathf.RoundToInt(Mathf.Abs(latestMarkY-j)) <= 1 &&
-							 gridList[i][j].gameObject.name == gridList[latestMarkX][latestMarkY].gameObject.name))
-						{
-							Debug.Log("BBBBB");
-							markList[i][j] = true;
-							latestMarkX = i;
-							latestMarkY = j;
-						}
+						markList[i][j] = true;
+						latestMarkX = i;
+						latestMarkY = j;
 					}
+
 					if (markList[i][j])
 					{
 						gridList[i][j].gameObject.GetComponent<SpriteRenderer>().color = 
-							new Color(1,1,1, 0.5f);
+							new Color(0.5f,0.5f,0.5f, 1);
 					}
 					else
 					{
@@ -145,22 +173,7 @@ public class Puzzling : MonoBehaviour
 			}
 		}
 
-		for (int j=0;j<gridList[0].Count;j++)
-		{
-			if (gridList[0][j].gameObject == null)
-			{
-				GameObject template = GetGameObject();
-				GameObject go = (GameObject)Instantiate(template,
-				                            new Vector3(j*0.85f, 0*-0.85f, 1)+offset, 
-				                            Quaternion.identity);
-				go.name = template.name;
-
-				go.GetComponent<SpriteRenderer>().sortingOrder = 
-					this.GetComponent<SpriteRenderer>().sortingOrder+1;
-				go.transform.parent = this.transform;
-				gridList[0][j].gameObject = go;
-			}
-		}
+		FillEmptyGrid();
 
 		if (Input.GetMouseButtonUp(0))
 		{
@@ -168,11 +181,38 @@ public class Puzzling : MonoBehaviour
 				maxTurn --;
 			ClearMark();
 		}
+
+		MovingCollected();
 	}
 
-	public bool CheckMarkNearby(int x, int y)
+	private void PushToBottom(int i, int j)
 	{
-		return false;
+		Vector3 offset = new Vector3 (-2.14f,0.5f);
+		gridList[i][j].gameObject = gridList[i-1][j].gameObject;
+		gridList[i][j].gameObject.transform.position = new Vector3(j*0.85f, i*-0.85f, 1)+offset;
+		gridList[i-1][j].gameObject = null;
+	}
+
+	private void FillEmptyGrid()
+	{
+		Vector3 offset = new Vector3 (-2.14f,0.5f);
+
+		for (int j=0;j<gridList[0].Count;j++)
+		{
+			if (gridList[0][j].gameObject == null)
+			{
+				GameObject template = GetGameObject();
+				GameObject go = (GameObject)Instantiate(template,
+				                                        new Vector3(j*0.85f, 0*-0.85f, 1)+offset, 
+				                                        Quaternion.identity);
+				go.name = template.name;
+				
+				go.GetComponent<SpriteRenderer>().sortingOrder = 
+					this.GetComponent<SpriteRenderer>().sortingOrder+1;
+				go.transform.parent = this.transform;
+				gridList[0][j].gameObject = go;
+			}
+		}
 	}
 
 	public int ClearMarked()
@@ -186,7 +226,8 @@ public class Puzzling : MonoBehaviour
 				if (markList[i][j])
 				{
 					clearedObject = gridList[i][j].gameObject.name;
-					Destroy(gridList[i][j].gameObject);
+					//Destroy(gridList[i][j].gameObject);
+					movingCollected.Add(gridList[i][j].gameObject);
 					gridList[i][j].gameObject = null;
 					count ++;
 				}
@@ -203,6 +244,51 @@ public class Puzzling : MonoBehaviour
 		}
 
 		return count;
+	}
+
+	private Vector3 GetDisplayResourcePos(string name)
+	{
+		foreach(GameObject go in displayCollected)
+		{
+			if (go.name == name)
+				return go.transform.position;
+		}
+
+		return new Vector3(0,0,0);
+	}
+
+	private int GetDisplayResourceIndex(string name)
+	{
+		for(int i=0;i<displayCollected.Count;i++)
+		{
+			if (displayCollected[i].name == name)
+				return i;
+		}
+
+		return -1;
+	}
+
+	public void MovingCollected()
+	{
+		for(int i=0;i<movingCollected.Count;i++)
+		{
+			movingCollected[i].GetComponent<SpriteRenderer>().color = new Color(1,1,1,1);
+			Vector3 pos = GetDisplayResourcePos(movingCollected[i].name);
+			Vector3 direction = pos - movingCollected[i].transform.position;
+			float distance = Vector3.Distance(pos, movingCollected[i].transform.position);
+
+			if (distance > 0.05f)
+			{
+				movingCollected[i].transform.Translate(direction.normalized*5*Time.deltaTime);
+			}
+			else
+			{
+				totalCollected[GetDisplayResourceIndex(movingCollected[i].name)]++;
+				Destroy(movingCollected[i]);
+				movingCollected.RemoveAt(i);
+				i--;
+			}
+		}
 	}
 
 	public void ClearMark()

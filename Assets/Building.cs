@@ -25,7 +25,8 @@ public class Building : MonoBehaviour
 		{
 			if (Input.GetMouseButtonDown(0) && this.gameObject.activeSelf)
 			{
-				RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
+				RaycastHit2D hit = Physics2D.Raycast(
+                    Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 				
 				if (hit.transform != null && hit.transform.gameObject == this.gameObject)
 				{
