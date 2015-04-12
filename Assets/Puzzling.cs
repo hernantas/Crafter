@@ -5,12 +5,12 @@ using System.Collections.Generic;
 [System.Serializable]
 class ResourceList
 {
-	public GameObject go;
+	public GameObject go = null;
 
-	public GameObject req;
+	public GameObject req = null;
 	[SerializeField]
-	private int curCount;
-	public int reqCount;
+	private int curCount = 0;
+	public int reqCount = 0;
 
 	public void IncreaseCount(int value)
 	{
@@ -41,8 +41,6 @@ class GridInfo
 
 public class Puzzling : MonoBehaviour 
 {
-	private float timer = 0;
-	private float maxTimer = 0.2f;
 	private int maxTurn = 12;
 	[SerializeField]
 	private List<ResourceList> farmList;
@@ -85,7 +83,7 @@ public class Puzzling : MonoBehaviour
 			{
 				GameObject go = (GameObject)Instantiate(blockerTemplate,
 				                                        new Vector3(j*0.85f, i*-0.85f, 1)+offset,
-				                                        Quaternion.identity);
+				                                        Quaternion.Euler(new Vector3(0,0,-45)));
 
 				go.transform.SetParent(this.transform);
 
@@ -122,7 +120,8 @@ public class Puzzling : MonoBehaviour
 					    Input.GetMouseButton(0))
 					{
 						if ((latestMarkX == -1 && latestMarkY == -1) ||
-						    (Mathf.RoundToInt(Mathf.Abs(latestMarkX-i)) <= 1 &&
+						    (!markList[i][j] &&
+						 	 Mathf.RoundToInt(Mathf.Abs(latestMarkX-i)) <= 1 &&
 						 	 Mathf.RoundToInt(Mathf.Abs(latestMarkY-j)) <= 1 &&
 							 gridList[i][j].gameObject.name == gridList[latestMarkX][latestMarkY].gameObject.name))
 						{
@@ -165,11 +164,10 @@ public class Puzzling : MonoBehaviour
 
 		if (Input.GetMouseButtonUp(0))
 		{
-			ClearMarked();
+			if (ClearMarked() > 0)
+				maxTurn --;
 			ClearMark();
 		}
-
-		timer += Time.deltaTime;
 	}
 
 	public bool CheckMarkNearby(int x, int y)
@@ -199,6 +197,7 @@ public class Puzzling : MonoBehaviour
 		{
 			if (farmList[i].go.name == clearedObject)
 			{
+				PlayerResources.Add(farmList[i].go.name);
 				farmList[i].IncreaseCount(count);
 			}
 		}
