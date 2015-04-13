@@ -38,4 +38,9 @@ public static class PlayerResources
 
 		return 0;
 	}
+
+	public static Dictionary<string, int> GetResources()
+	{
+		return resource;
+	}
 }

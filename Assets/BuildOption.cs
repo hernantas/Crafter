@@ -46,14 +46,8 @@ class BuildingData
 }
 
 public class BuildOption : MonoBehaviour {
-	private GameObject ground;
-	public GameObject Ground
-	{
-		set
-		{
-			ground = value;
-		}
-	}
+	private GameObject ground = null;
+	bool bActive = false;
 	[SerializeField]
 	private List<BuildingData> buildList = new List<BuildingData>();
 	private List<GameObject> managedList = new List<GameObject>();
@@ -67,7 +61,7 @@ public class BuildOption : MonoBehaviour {
 	// Update is called once per frame
 	void Update () 
 	{
-		if (Input.GetMouseButtonDown(0) && this.gameObject.activeSelf)
+		if (Input.GetMouseButtonDown(0) && bActive)
 		{
 			RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 			
@@ -81,9 +75,9 @@ public class BuildOption : MonoBehaviour {
 					{
 						b = true;
 
-						if (!IsBuildingMax(go.name))
+						if (!IsBuildingMax(go.name) && go.GetComponent<Building>().isCostAvailable())
 						{
-							go.GetComponent<Building>().BuildBuilding();
+							BuildBuilding(go);
 							IncreaseBuilding(go.name);
 						}
 
@@ -101,10 +95,38 @@ public class BuildOption : MonoBehaviour {
 		}
 	}
 
-	public void ShowBuild()
+	void LateUpdate()
 	{
-		GetComponent<SpriteRenderer> ().enabled = true;
-		GetComponent<BoxCollider2D> ().enabled = false;
+		if (ground == null)
+		{
+			bActive = false;
+			GetComponent<SpriteRenderer> ().enabled = false;
+		}
+		else
+		{
+			bActive = true;
+			GetComponent<SpriteRenderer> ().enabled = true;
+		}
+	}
+
+	public void BuildBuilding(GameObject building)
+	{
+		Vector3 offset = new Vector3 (0, 0.6f, 0);
+		
+		GameObject go = (GameObject)Instantiate (this.GetBuildObject(building.name), 
+		                                         ground.transform.position + offset, 
+		                                         Quaternion.identity);
+		
+		go.name = building.name;
+		go.transform.SetParent (this.transform.parent.parent);
+		ground.GetComponent<Ground> ().Building = go;
+		go.GetComponent<Building> ().Build (false);
+		this.HideBuild ();
+	}
+
+	public void ShowBuild(GameObject groundGo)
+	{
+		this.ground = groundGo;
 
 		Vector3 offset = new Vector3 (-2.15f, 2.1f, 0);
 
@@ -122,7 +144,16 @@ public class BuildOption : MonoBehaviour {
 			go.GetComponent<Building>().Ground = ground;
 
 			if (IsBuildingMax(go.name))
-				go.GetComponent<SpriteRenderer>().color = new Color(1,1,1, 0.2f);
+			{
+
+					go.GetComponent<SpriteRenderer>().color = new Color(1,1,1, 0.2f);
+					
+			}
+			else
+			{
+				if (!go.GetComponent<Building>().isCostAvailable())
+					go.GetComponent<SpriteRenderer>().color = new Color(1,0.5f, 0.5f, 0.2f);
+			}
 
 			go.transform.SetParent(this.gameObject.transform);
 
@@ -132,8 +163,7 @@ public class BuildOption : MonoBehaviour {
 
 	public void HideBuild()
 	{
-		GetComponent<SpriteRenderer> ().enabled = false;
-		GetComponent<BoxCollider2D> ().enabled = false;
+		this.ground = null;
 
 		foreach (GameObject go in managedList)
 		{

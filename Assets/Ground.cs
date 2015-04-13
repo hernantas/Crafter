@@ -26,34 +26,18 @@ public class Ground : MonoBehaviour {
 			if(hit.transform != null && 
 				hit.transform.gameObject == this.gameObject)
 			{
-				GroundClickEvent(true);
-			}
-			else
-			{
-				GroundClickEvent(false);
+				GroundClickEvent();
 			}
 		}
 	}
 
-	void GroundClickEvent(bool condition)
+	void GroundClickEvent()
 	{
 		if (Building == null)
 		{
-			if (condition)
-			{
-				GameObject go = GameObject.Find("Build Option");
-				BuildOption buildOption = go.GetComponent<BuildOption>();
-				buildOption.Ground = this.gameObject;
-				buildOption.ShowBuild();
-			}
-			else
-			{
-				/*if (buildOption != null)
-				{
-					buildOption.HideBuild();
-					buildOption.Ground = null;
-				}*/
-			}
+			GameObject go = GameObject.Find("Build Option");
+			BuildOption buildOption = go.GetComponent<BuildOption>();
+			buildOption.ShowBuild(this.gameObject);
 		}
 	}
 }

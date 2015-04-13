@@ -60,7 +60,9 @@ public class Puzzling : MonoBehaviour
 	{
 		for (int i=0;i<totalCollected.Count;i++)
 		{
-			GUI.Label(new Rect(i*74+35,16,50,32), 
+			Vector3 screenPos = Camera.main.WorldToScreenPoint(displayCollected[i].transform.position);
+			//i*74+35
+			GUI.Label(new Rect(screenPos.x,16,50,32), 
 			          totalCollected[i].ToString(), 
 			          textCollected);
 		}
@@ -129,57 +131,64 @@ public class Puzzling : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
-		RaycastHit2D hit = Physics2D.Raycast(
-			Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
-
-		for(int i=gridList.Count-1;i>=0;i--)
+		if (maxTurn > 0)
 		{
-			for (int j=0;j<gridList[i].Count;j++)
-			{
-				if (gridList[i][j].gameObject == null)
-				{
-					if (i > 0 && gridList[i-1][j].gameObject != null)
-					{
-						PushToBottom(i, j);
-					}
-				}
-				else
-				{
-					if ((hit.transform != null && 
-					    hit.transform.gameObject == gridList[i][j].collider &&
-					    (latestMarkX != i || latestMarkY != j) && Input.GetMouseButton(0)) 
-					    && 
-					    ((latestMarkX == -1 && latestMarkY == -1) ||
-					    (!markList[i][j] && Mathf.RoundToInt(Mathf.Abs(latestMarkX-i)) <= 1 &&
-					 	Mathf.RoundToInt(Mathf.Abs(latestMarkY-j)) <= 1 &&
-						gridList[i][j].gameObject.name == gridList[latestMarkX][latestMarkY].gameObject.name)))
-					{
-						markList[i][j] = true;
-						latestMarkX = i;
-						latestMarkY = j;
-					}
+			RaycastHit2D hit = Physics2D.Raycast(
+				Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 
-					if (markList[i][j])
+			for(int i=gridList.Count-1;i>=0;i--)
+			{
+				for (int j=0;j<gridList[i].Count;j++)
+				{
+					if (gridList[i][j].gameObject == null)
 					{
-						gridList[i][j].gameObject.GetComponent<SpriteRenderer>().color = 
-							new Color(0.5f,0.5f,0.5f, 1);
+						if (i > 0 && gridList[i-1][j].gameObject != null)
+						{
+							PushToBottom(i, j);
+						}
 					}
 					else
 					{
-						gridList[i][j].gameObject.GetComponent<SpriteRenderer>().color = 
-							new Color(1,1,1, 1);
+						if ((hit.transform != null && 
+						    hit.transform.gameObject == gridList[i][j].collider &&
+						    (latestMarkX != i || latestMarkY != j) && Input.GetMouseButton(0)) 
+						    && 
+						    ((latestMarkX == -1 && latestMarkY == -1) ||
+						    (!markList[i][j] && Mathf.RoundToInt(Mathf.Abs(latestMarkX-i)) <= 1 &&
+						 	Mathf.RoundToInt(Mathf.Abs(latestMarkY-j)) <= 1 &&
+							gridList[i][j].gameObject.name == gridList[latestMarkX][latestMarkY].gameObject.name)))
+						{
+							markList[i][j] = true;
+							latestMarkX = i;
+							latestMarkY = j;
+						}
+
+						if (markList[i][j])
+						{
+							gridList[i][j].gameObject.GetComponent<SpriteRenderer>().color = 
+								new Color(0.5f,0.5f,0.5f, 1);
+						}
+						else
+						{
+							gridList[i][j].gameObject.GetComponent<SpriteRenderer>().color = 
+								new Color(1,1,1, 1);
+						}
 					}
 				}
 			}
+
+			FillEmptyGrid();
+
+			if (Input.GetMouseButtonUp(0))
+			{
+				if (ClearMarked() > 0)
+					maxTurn --;
+				ClearMark();
+			}
 		}
-
-		FillEmptyGrid();
-
-		if (Input.GetMouseButtonUp(0))
+		else if (movingCollected.Count == 0)
 		{
-			if (ClearMarked() > 0)
-				maxTurn --;
-			ClearMark();
+			Application.LoadLevel(0);
 		}
 
 		MovingCollected();

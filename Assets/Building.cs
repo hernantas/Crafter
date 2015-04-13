@@ -1,15 +1,32 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+
+[System.Serializable]
+public class BuildCost
+{
+	public GameObject resource;
+	public int count;
+}
 
 public class Building : MonoBehaviour 
 {
 	private bool buildMode = true;
-	private GameObject ground;
+	private GameObject ground = null;
 	public GameObject Ground
 	{
 		set
 		{
 			ground = value;
+		}
+	}
+	[SerializeField]
+	private List<BuildCost> cost = new List<BuildCost>();
+	public List<BuildCost> Cost
+	{
+		get
+		{
+			return this.cost;
 		}
 	}
 
@@ -36,41 +53,37 @@ public class Building : MonoBehaviour
 		}
 	}
 
+	public bool isCostAvailable()
+	{
+		bool b = true;
+		foreach (BuildCost bc in cost)
+		{
+			if (PlayerResources.Get(bc.resource.name) < bc.count)
+			{
+				b = false;
+			}
+		}
+		return b;
+	}
+
 	public void Build(bool b)
 	{
 		buildMode = b;
 
 		if (!b) 
 		{
+			foreach(BuildCost bc in cost)
+			{
+				PlayerResources.Add(bc.resource.name, -bc.count);
+            }
 			OnBuild();
 		}
-	}
-
-	public void BuildBuilding()
-	{
-		Vector3 offset = new Vector3 (0, 0.6f, 0);
-
-		GameObject bo = GameObject.Find("Build Option");
-		BuildOption bOpt = bo.GetComponent<BuildOption> ();
-
-		GameObject go = (GameObject)Instantiate (bOpt.GetBuildObject(this.name), 
-		                                         ground.transform.position + offset, 
-		                                         Quaternion.identity);
-
-		go.name = this.name;
-		go.transform.SetParent (this.transform.parent.parent);
-		ground.GetComponent<Ground> ().Building = go;
-
-		Building bu = go.GetComponent<Building> ();
-		bu.Build (false);
-		bOpt.HideBuild ();
 	}
 
 	public void OnBuild()
 	{
 		if (this.name == "cityhall")
 		{
-
 			GameObject go = GameObject.Find("Build Option");
 			BuildOption opt = go.GetComponent<BuildOption>();
 
@@ -83,18 +96,7 @@ public class Building : MonoBehaviour
 	{
 		if (this.name == "farm")
 		{
-			GameObject home = GameObject.Find("Home");
-			GameObject game = GameObject.Find("Game");
-
-			for (int i=0;i<home.transform.childCount;i++)
-			{
-				home.transform.GetChild(i).gameObject.SetActive(false);
-			}
-
-			for (int i=0;i<game.transform.childCount;i++)
-			{
-				game.transform.GetChild(i).gameObject.SetActive(true);
-			}
+			Application.LoadLevel(1);
 		}
 		else if (this.name == "blacksmith")
 		{
