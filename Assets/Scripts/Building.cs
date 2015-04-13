@@ -20,6 +20,7 @@ public class Building : MonoBehaviour
 			ground = value;
 		}
 	}
+	private bool noCost = false;
 	[SerializeField]
 	private List<BuildCost> cost = new List<BuildCost>();
 	public List<BuildCost> Cost
@@ -53,6 +54,11 @@ public class Building : MonoBehaviour
 		}
 	}
 
+	public void NoCost()
+	{
+		noCost = true;
+	}
+
 	public bool isCostAvailable()
 	{
 		bool b = true;
@@ -61,8 +67,10 @@ public class Building : MonoBehaviour
 			if (PlayerResources.Get(bc.resource.name) < bc.count)
 			{
 				b = false;
+				break;
 			}
 		}
+
 		return b;
 	}
 
@@ -72,10 +80,13 @@ public class Building : MonoBehaviour
 
 		if (!b) 
 		{
-			foreach(BuildCost bc in cost)
+			if (!noCost)
 			{
-				PlayerResources.Add(bc.resource.name, -bc.count);
-            }
+				foreach(BuildCost bc in cost)
+				{
+					PlayerResources.Add(bc.resource.name, -bc.count);
+	            }
+			}
 			OnBuild();
 		}
 	}
@@ -89,6 +100,7 @@ public class Building : MonoBehaviour
 
 			opt.IncreaseBuildingMax("farm", 1);
 			opt.IncreaseBuildingMax("blacksmith", 1);
+			opt.IncreaseBuildingMax("mine", 1);
 		}
 	}
 
@@ -98,9 +110,13 @@ public class Building : MonoBehaviour
 		{
 			Application.LoadLevel(1);
 		}
+		else if (this.name == "mine")
+		{
+			Application.LoadLevel(2);
+		}
 		else if (this.name == "blacksmith")
 		{
-
+			Application.LoadLevel(3);
 		}
 	}
 }

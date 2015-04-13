@@ -16,9 +16,12 @@ public class ResourcesBonus : MonoBehaviour {
 	// Use this for initialization
 	void Start () 
 	{
-		foreach (BonusInfo bi in bonusAtStart)
+		if (!PlayerResources.HasResource)
 		{
-			PlayerResources.Add(bi.resource.name, bi.count);
+			foreach (BonusInfo bi in bonusAtStart)
+			{
+				PlayerResources.Add(bi.resource.name, bi.count);
+			}
 		}
 	}
 }

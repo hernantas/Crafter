@@ -45,7 +45,8 @@ class BuildingData
 	}
 }
 
-public class BuildOption : MonoBehaviour {
+public class BuildOption : MonoBehaviour 
+{
 	private GameObject ground = null;
 	bool bActive = false;
 	[SerializeField]
@@ -55,7 +56,21 @@ public class BuildOption : MonoBehaviour {
 	// Use this for initialization
 	void Start () 
 	{
+		if (PlayerBuilding.HasBuilding())
+		{
+			for (int i=0;i<PlayerBuilding.Count;i++)
+			{
+				GroundBuildingRelation gbr = PlayerBuilding.GetByIndex(i);
 
+				GameObject searchGround = GameObject.Find(gbr.ground);
+				GameObject template = this.GetBuildObject(gbr.building);
+
+				this.ground = searchGround;
+				BuildBuilding(template, false);
+			}
+		}
+
+		this.ground = null;
 	}
 	
 	// Update is called once per frame
@@ -63,7 +78,8 @@ public class BuildOption : MonoBehaviour {
 	{
 		if (Input.GetMouseButtonDown(0) && bActive)
 		{
-			RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
+			RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), 
+			                                     Vector2.zero);
 			
 			if (hit.transform != null)
 			{
@@ -111,6 +127,11 @@ public class BuildOption : MonoBehaviour {
 
 	public void BuildBuilding(GameObject building)
 	{
+		BuildBuilding(building, true);
+	}
+
+	public void BuildBuilding(GameObject building, bool withCost)
+	{
 		Vector3 offset = new Vector3 (0, 0.6f, 0);
 		
 		GameObject go = (GameObject)Instantiate (this.GetBuildObject(building.name), 
@@ -120,6 +141,12 @@ public class BuildOption : MonoBehaviour {
 		go.name = building.name;
 		go.transform.SetParent (this.transform.parent.parent);
 		ground.GetComponent<Ground> ().Building = go;
+
+		if (!withCost)
+			go.GetComponent<Building> ().NoCost();
+		else
+			PlayerBuilding.Add(ground.name, go.name);
+
 		go.GetComponent<Building> ().Build (false);
 		this.HideBuild ();
 	}
@@ -145,14 +172,12 @@ public class BuildOption : MonoBehaviour {
 
 			if (IsBuildingMax(go.name))
 			{
-
-					go.GetComponent<SpriteRenderer>().color = new Color(1,1,1, 0.2f);
-					
+				go.GetComponent<SpriteRenderer>().color = new Color(1,1,1, 0.2f);
 			}
 			else
 			{
 				if (!go.GetComponent<Building>().isCostAvailable())
-					go.GetComponent<SpriteRenderer>().color = new Color(1,0.5f, 0.5f, 0.2f);
+					go.GetComponent<SpriteRenderer>().color = new Color(1,0.25f, 0.25f, 0.75f);
 			}
 
 			go.transform.SetParent(this.gameObject.transform);

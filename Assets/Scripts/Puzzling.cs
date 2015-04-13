@@ -41,6 +41,7 @@ class GridInfo
 
 public class Puzzling : MonoBehaviour 
 {
+	[SerializeField]
 	private int maxTurn = 12;
 	[SerializeField]
 	private List<ResourceList> farmList;
@@ -224,6 +225,30 @@ public class Puzzling : MonoBehaviour
 		}
 	}
 
+	public bool MarkAll(string resourceName)
+	{
+		for (int i=0;i<gridList.Count;i++)
+		{
+			for (int j=0;j<gridList[i].Count;j++)
+			{
+				if (gridList[i][j].gameObject != null && 
+				    gridList[i][j].gameObject.name == resourceName)
+				{
+					markList[i][j] = true;
+				}
+			}
+		}
+
+		int count = ClearMarked();
+		ClearMark();
+
+		if (count > 0)
+		{
+			return true;
+		}
+		return false;
+	}
+
 	public int ClearMarked()
 	{
 		int count = 0;
@@ -247,7 +272,7 @@ public class Puzzling : MonoBehaviour
 		{
 			if (farmList[i].go.name == clearedObject)
 			{
-				PlayerResources.Add(farmList[i].go.name);
+				PlayerResources.Add(farmList[i].go.name, count+(count/6));
 				farmList[i].IncreaseCount(count);
 			}
 		}
@@ -293,6 +318,7 @@ public class Puzzling : MonoBehaviour
 			else
 			{
 				totalCollected[GetDisplayResourceIndex(movingCollected[i].name)]++;
+
 				Destroy(movingCollected[i]);
 				movingCollected.RemoveAt(i);
 				i--;
