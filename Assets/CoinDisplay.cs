@@ -10,7 +10,7 @@ public class CoinDisplay : MonoBehaviour
 	void Start () 
 	{
 		screenPos = Camera.main.WorldToScreenPoint(this.transform.position);
-		textStyle = Reference.Get.textStyle;
+		textStyle = Reference.Asset.textStyle;
 	}
 
 	void OnGUI()

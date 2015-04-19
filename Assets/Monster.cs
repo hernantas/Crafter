@@ -20,8 +20,25 @@ public class Attr
 
 public class Monster : MonoBehaviour 
 {
+	[SerializeField]
+	private int storageIndex = -1;
+	public int StorageIndex 
+	{
+		set { storageIndex = value; }
+		get { return storageIndex; }
+	}
+	public GameObject Original
+	{
+		set; get;
+	}
+
+	[SerializeField]
 	private int exp = 0;
-	public int Exp { set { exp = value; } }
+	public int Exp 
+	{ 
+		set { exp = value; } 
+		get { return exp; }
+	}
 	private const int baseExp = 50;
 
 	public int Level
@@ -39,8 +56,8 @@ public class Monster : MonoBehaviour
 	public float Damage { get { return damage.Get(Level-1); } }
 
 	[SerializeField]
-	private float cost = 0;
-	public float Cost { get { return cost; } }
+	private int cost = 0;
+	public int Cost { get { return cost; } }
 
 	// Use this for initialization
 	void Start () 
@@ -52,5 +69,10 @@ public class Monster : MonoBehaviour
 	void Update () 
 	{
 	
+	}
+
+	public void AddExp(int exp)
+	{
+		this.exp += exp;
 	}
 }

@@ -10,6 +10,13 @@ public class StoredMonster
 
 public static class PlayerMonster
 {
+	private static int indexEnemny = -1;
+	public static int IndexEnemy
+	{
+		set { indexEnemny = value; }
+		get { return indexEnemny; }
+	}
+
 	private static bool isLoaded = false;
 	public static bool IsLoaded { get { return isLoaded; } }
 
@@ -27,6 +34,33 @@ public static class PlayerMonster
 		sm.monsterName = name;
 		sm.exp = exp;
 		storage.Add(sm);
+	}
+
+	public static GameObject Spawn(int index, Vector3 spawnPos)
+	{
+		GameObject created = Reference.Creator.CreateFromTemplate(storage[index].monsterName);
+
+		if (created != null)
+		{
+			created.name = storage[index].monsterName;
+			created.transform.position = spawnPos;
+			created.GetComponent<Monster>().Exp = storage[index].exp;
+			created.GetComponent<Monster>().StorageIndex = index;
+		}
+
+		return created;
+	}
+
+	public static void Swap(int index1, int index2)
+	{
+		StoredMonster temp = storage[index1];
+		storage[index1] = storage[index2];
+		storage[index2] = temp;
+	}
+
+	public static GameObject Spawn(int index)
+	{
+		return Spawn(index, new Vector3(0,0,0));
 	}
 
 	public static StoredMonster Get(int index)

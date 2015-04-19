@@ -11,16 +11,23 @@ class GridInfo
 
 public class Duel : MonoBehaviour 
 {
+	private int defeatedEnemy = 0;
+	private GameObject enemy = null;
+	[SerializeField]
+	private float health = 0;
 	[SerializeField]
 	private GameObject gridCollider = null;
+	[SerializeField]
+	private GameObject textTemplate = null;
 	private List<List<GridInfo>> managedGrid = new List<List<GridInfo>>();
+	private List<GameObject> activeMonster = new List<GameObject>();
 	private List<GameObject> movingList = new List<GameObject>();
 	private Vector3 gridOffset = new Vector3(-2.14f,0.46f,0);
 	private int lastMarkX = -1;
 	private int lastMarkY = -1;
 
 	// Use this for initialization
-	void Start () 
+	void Start ()
 	{
 		for (int row = 0; row < 5; row++)
 		{
@@ -39,24 +46,36 @@ public class Duel : MonoBehaviour
 				managedGrid[row].Add(gi);
 			}
 		}
+
+		for (int i=0;i<PlayerMonster.Count;i++)
+		{
+			GameObject go = PlayerMonster.Spawn(i, new Vector3(i*1.5f-(6/PlayerMonster.Count)/2, 1.95f));
+			go.transform.localScale = new Vector3(0.3f, 0.3f);
+
+			activeMonster.Add(go);
+		}
+
 	}
 	
 	// Update is called once per frame
 	void Update () 
 	{
-		MoveToFill();
-		FillEmpty();
-		ChangeGridDisplay();
-
-		if (Input.GetMouseButton(0))
+		if (HealthRoutine())
 		{
-			TestMouseClick();
-		}
+			MoveToFill();
+			FillEmpty();
+			ChangeGridDisplay();
 
-		if (Input.GetMouseButtonUp(0))
-		{
-			ClearMarked();
-			ClearMark();
+			if (Input.GetMouseButton(0))
+			{
+				TestMouseClick();
+			}
+
+			if (Input.GetMouseButtonUp(0))
+			{
+				ClearMarked();
+				ClearMark();
+			}
 		}
 
 		MovingGrid();
@@ -96,16 +115,17 @@ public class Duel : MonoBehaviour
 		}
 	}
 
-	public bool ClearMarked()
+	public int ClearMarked()
 	{
-		bool b = false;
-
+		int count = 0;
 		for (int row = 0; row < 5; row++)
 		{
 			for (int col = 0; col < 6; col++)
 			{
 				if (managedGrid[row][col].marked)
 				{
+					count++;
+
 					GameObject go = managedGrid[row][col].gridObject;
 					go.GetComponent<SpriteRenderer>().color = new Color(1,1,1,1);
 
@@ -115,7 +135,7 @@ public class Duel : MonoBehaviour
 			}
 		}
 
-		return false;
+		return count;
 	}
 
 	public void ClearMark()
@@ -158,13 +178,14 @@ public class Duel : MonoBehaviour
 			{
 				if (managedGrid[row][col].gridObject == null)
 				{
-					GameObject template = 
-						Reference.Get.monsterTemplate[Random.Range(0, Reference.Get.monsterTemplate.Count-1)];
+					GameObject template = activeMonster[Random.Range(0, activeMonster.Count)];
+						//Reference.Asset.monsterTemplate[Random.Range(0, Reference.Asset.monsterTemplate.Count-1)];
 					GameObject go = (GameObject)Instantiate(template,
 					                                        managedGrid[row][col].collider.transform.position,
 					                                        Quaternion.identity);
 					go.name = template.name;
-					go.transform.localScale = new Vector3(0.5f,0.5f);
+					go.transform.localScale = new Vector3(0.2f,0.2f);
+					go.GetComponent<Monster>().Original = template;
 					managedGrid[row][col].gridObject = go;
 				}
 			}
@@ -203,10 +224,72 @@ public class Duel : MonoBehaviour
 			}
 			else
 			{
+
+				GameObject ori = movingList[i].GetComponent<Monster>().Original;
+				ori.GetComponent<Monster>().Exp += 1;
+				health -= ori.GetComponent<Monster>().Damage;
+
+				float dirRandom = Random.Range(-0.5f,0.5f);
+				Vector3 targetOffsetPos = new Vector3(dirRandom,0);
+				GameObject text = (GameObject) Instantiate(textTemplate,
+				                                           targetPos+targetOffsetPos,
+				                                           Quaternion.identity);
+				text.GetComponent<TextMesh>().text = "-"+ori.GetComponent<Monster>().Damage.ToString();
+				text.GetComponent<TextMesh>().color = new Color(0.75f,0,0f);
+				text.GetComponent<TextMesh>().offsetZ = -1f;
+				text.GetComponent<TextMesh>().fontSize = 24;
+				text.AddComponent<Lifetime>();
+				text.GetComponent<Lifetime>().LifeTime = 1f;
+				text.GetComponent<Lifetime>().FloatDirection = new Vector2(dirRandom, 0.5f);
+
 				Destroy(movingList[i]);
 				movingList.RemoveAt(i);
 				i--;
 			}
 		}
+	}
+
+	private bool HealthRoutine()
+	{
+		if (enemy == null)
+		{
+			int indexRandom = PlayerMonster.IndexEnemy+defeatedEnemy;
+			enemy = (GameObject) Instantiate(Reference.Asset.monsterTemplate[indexRandom],
+			                                 new Vector3(0,4,0),
+			                                 Quaternion.identity);
+			enemy.transform.localScale = new Vector3 (0.3f, 0.3f);
+			health = enemy.GetComponent<Monster>().MaxHealth;
+		}
+		else
+		{
+			if (health <= 0)
+			{
+				if (movingList.Count == 0)
+				{
+					if (defeatedEnemy < 2)
+					{
+						Destroy(enemy.gameObject);
+						enemy = null;
+						defeatedEnemy++;
+					}
+					else
+					{
+						// Apply database
+
+						foreach(GameObject go in activeMonster)
+						{
+							PlayerMonster.Get(go.GetComponent<Monster>().StorageIndex).exp = 
+								go.GetComponent<Monster>().Exp;
+						}
+						
+						Application.LoadLevel(0);
+					}
+				}
+
+				return false;
+			}
+		}
+
+		return true;
 	}
 }
