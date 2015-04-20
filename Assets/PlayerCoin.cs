@@ -5,6 +5,11 @@ public static class PlayerCoin
 {
 	private static int coin = 30;
 
+	public static void Set(int value)
+	{
+		coin = value;
+	}
+
 	public static void Add(int value)
 	{
 		coin += value;

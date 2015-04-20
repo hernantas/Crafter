@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class BuildingClick : MonoBehaviour {
+public class BuildingClick : MonoBehaviour 
+{
 
 	// Use this for initialization
 	void Start () 
@@ -23,13 +24,12 @@ public class BuildingClick : MonoBehaviour {
 
 				if (this.name == "cityhall3")
 				{
-					Debug.Log("Not implemented yet");
+					Application.LoadLevel(4);
 				}
 				else if (this.name == "mine")
 				{
 					if (PlayerMonster.Count > 0)
 					{
-						PlayerMonster.IndexEnemy = 0;
 						Application.LoadLevel(1);
 					}
 					else

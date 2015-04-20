@@ -8,13 +8,10 @@ public class AssetsReference : MonoBehaviour
 	public List<GameObject> monsterTemplate = new List<GameObject>();
 	public GameObject textUtility;
 
-	public AssetsReference()
-	{
-
-	}
-
 	void Start()
 	{
+		PlayerSave.Auto();
+
 		if (monsterTemplate.Count > 0 && !PlayerMonster.IsLoaded)
 		{
 			PlayerMonster.Load();
@@ -22,5 +19,18 @@ public class AssetsReference : MonoBehaviour
 			PlayerMonster.Add(monsterTemplate[1].name, 0);
 			PlayerMonster.Add(monsterTemplate[2].name, 0);
 		}
+	}
+
+	public GameObject GetMonster(string name)
+	{
+		foreach(GameObject go in monsterTemplate)
+		{
+			if (go.name == name)
+			{
+				return go;
+			}
+		}
+
+		return null;
 	}
 }

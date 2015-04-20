@@ -11,14 +11,33 @@ class GridInfo
 
 public class Duel : MonoBehaviour 
 {
+	private bool gameEnd = false;
 	private int defeatedEnemy = 0;
 	private GameObject enemy = null;
 	[SerializeField]
 	private float health = 0;
+	private float maxHealth = 0;
+	[SerializeField]
+	private float playerHealth = 0;
+	private float playerMaxHealth = 0;
 	[SerializeField]
 	private GameObject gridCollider = null;
 	[SerializeField]
 	private GameObject textTemplate = null;
+	[SerializeField]
+	private GameObject messageBox = null;
+
+	[SerializeField]
+	private GameObject greenBar = null;
+	[SerializeField]
+	private GameObject redBar = null;
+	[SerializeField]
+	private GameObject yellowBar = null;
+	private List<GameObject> barManaged = new List<GameObject>();
+	private GameObject playerBarManager = null;
+
+	private int damageCounter = 0;
+
 	private List<List<GridInfo>> managedGrid = new List<List<GridInfo>>();
 	private List<GameObject> activeMonster = new List<GameObject>();
 	private List<GameObject> movingList = new List<GameObject>();
@@ -37,7 +56,9 @@ public class Duel : MonoBehaviour
 			{
 				GameObject go = (GameObject)Instantiate(gridCollider,
 				                                        new Vector3(col*0.86f,-row*0.86f,0)+gridOffset,
-				                                        Quaternion.identity);
+				                                        Quaternion.Euler(0,0,45f));
+				go.transform.localScale = new Vector3(0.6f, 0.6f);
+
 				GridInfo gi = new GridInfo();
 				gi.gridObject = null;
 				gi.collider = go;
@@ -47,19 +68,26 @@ public class Duel : MonoBehaviour
 			}
 		}
 
-		for (int i=0;i<PlayerMonster.Count;i++)
+		for (int i=0;i<PlayerMonster.Count && i < 3;i++)
 		{
-			GameObject go = PlayerMonster.Spawn(i, new Vector3(i*1.5f-(6/PlayerMonster.Count)/2, 1.95f));
+			GameObject go = PlayerMonster.Spawn(i, new Vector3(i*1.5f-(6/3)/2-0.5f, 1.95f));
 			go.transform.localScale = new Vector3(0.3f, 0.3f);
+
+			playerHealth += go.GetComponent<Monster>().MaxHealth;
 
 			activeMonster.Add(go);
 		}
+
+		playerMaxHealth = playerHealth;
 
 	}
 	
 	// Update is called once per frame
 	void Update () 
 	{
+		if (movingList.Count == 0)
+			damageCounter = 0;
+
 		if (HealthRoutine())
 		{
 			MoveToFill();
@@ -78,7 +106,28 @@ public class Duel : MonoBehaviour
 			}
 		}
 
+		ShowHealthBar();
 		MovingGrid();
+
+		if (gameEnd)
+			ShowGameEnd();
+	}
+
+	void OnGUI()
+	{
+		if (!gameEnd)
+		{
+			foreach(GameObject go in activeMonster)
+			{
+				Vector3 screenPos = Camera.main.WorldToScreenPoint(go.transform.position);
+
+				GUI.Label(new Rect(screenPos.x, 
+				                   Screen.height-screenPos.y-(Screen.height*0.05f), 
+				                   65, 25),
+				          "Lv." + go.GetComponent<Monster>().Level,
+				          Reference.Asset.textStyle);
+			}
+		}
 	}
 
 	private void TestMouseClick()
@@ -200,7 +249,7 @@ public class Duel : MonoBehaviour
 			{
 				if (managedGrid[row][col].marked)
 					managedGrid[row][col].gridObject.GetComponent<SpriteRenderer>().color = 
-						new Color(1,1,1,0.5f);
+						new Color(0.5f,0.5f,0.5f,0.5f);
 				else
 					managedGrid[row][col].gridObject.GetComponent<SpriteRenderer>().color = 
 						new Color(1,1,1,1);
@@ -224,17 +273,19 @@ public class Duel : MonoBehaviour
 			}
 			else
 			{
+				damageCounter++;
 
 				GameObject ori = movingList[i].GetComponent<Monster>().Original;
 				ori.GetComponent<Monster>().Exp += 1;
-				health -= ori.GetComponent<Monster>().Damage;
+				float damage = ori.GetComponent<Monster>().Damage * (1+(damageCounter/5.0f));
+				health -= damage;
 
 				float dirRandom = Random.Range(-0.5f,0.5f);
 				Vector3 targetOffsetPos = new Vector3(dirRandom,0);
 				GameObject text = (GameObject) Instantiate(textTemplate,
 				                                           targetPos+targetOffsetPos,
 				                                           Quaternion.identity);
-				text.GetComponent<TextMesh>().text = "-"+ori.GetComponent<Monster>().Damage.ToString();
+				text.GetComponent<TextMesh>().text = "-" + ((int)damage).ToString();
 				text.GetComponent<TextMesh>().color = new Color(0.75f,0,0f);
 				text.GetComponent<TextMesh>().offsetZ = -1f;
 				text.GetComponent<TextMesh>().fontSize = 24;
@@ -251,6 +302,12 @@ public class Duel : MonoBehaviour
 
 	private bool HealthRoutine()
 	{
+		if (movingList.Count > 0)
+			return false;
+
+		if (gameEnd)
+			return false;
+
 		if (enemy == null)
 		{
 			int indexRandom = PlayerMonster.IndexEnemy+defeatedEnemy;
@@ -258,7 +315,8 @@ public class Duel : MonoBehaviour
 			                                 new Vector3(0,4,0),
 			                                 Quaternion.identity);
 			enemy.transform.localScale = new Vector3 (0.3f, 0.3f);
-			health = enemy.GetComponent<Monster>().MaxHealth;
+			health += enemy.GetComponent<Monster>().MaxHealth * (3+PlayerMonster.IndexEnemy);
+			maxHealth = enemy.GetComponent<Monster>().MaxHealth * (3+PlayerMonster.IndexEnemy);
 		}
 		else
 		{
@@ -274,15 +332,8 @@ public class Duel : MonoBehaviour
 					}
 					else
 					{
-						// Apply database
-
-						foreach(GameObject go in activeMonster)
-						{
-							PlayerMonster.Get(go.GetComponent<Monster>().StorageIndex).exp = 
-								go.GetComponent<Monster>().Exp;
-						}
-						
-						Application.LoadLevel(0);
+						defeatedEnemy++;
+						gameEnd = true;
 					}
 				}
 
@@ -291,5 +342,128 @@ public class Duel : MonoBehaviour
 		}
 
 		return true;
+	}
+
+	private void ShowHealthBar()
+	{
+		if (enemy == null)
+		{
+			foreach(GameObject go in barManaged)
+				Destroy(go);
+			barManaged.Clear();
+
+			return;
+		}
+
+		int healthPerc = Mathf.CeilToInt((health/maxHealth)*10);
+
+		if (barManaged.Count != healthPerc)
+		{
+			foreach(GameObject go in barManaged)
+				Destroy(go);
+			barManaged.Clear();
+
+			Vector3 pos = enemy.transform.position + new Vector3(1,0);
+
+			for (int i = 0 ; i < healthPerc ; i++)
+			{
+				GameObject bar = null;
+
+				if (i > 5)
+					bar = (GameObject)Instantiate(greenBar,
+									              pos + new Vector3(i*0.2f,0),
+									              Quaternion.identity);
+				else if (i > 2)
+					bar = (GameObject)Instantiate(yellowBar,
+					                              pos + new Vector3(i*0.2f,0),
+					                              Quaternion.identity);
+				else
+					bar = (GameObject)Instantiate(redBar,
+					                              pos + new Vector3(i*0.2f,0),
+					                              Quaternion.identity);
+
+				bar.GetComponent<SpriteRenderer>().sortingOrder = 10;
+				barManaged.Add(bar);
+			}
+		}
+
+		if (playerBarManager == null)
+		{
+			playerBarManager = (GameObject) Instantiate( redBar,
+			                                            new Vector3 (0,1.161f,0),
+			                                            Quaternion.Euler(new Vector3(0,0,90)));
+			playerBarManager.GetComponent<SpriteRenderer>().sortingOrder = 10;
+		}
+		else
+		{
+			playerBarManager.transform.localScale = new Vector3(1,15*Mathf.Max(playerHealth/playerMaxHealth, 0.0f),1);
+		}
+
+		if (enemy != null && !gameEnd && movingList.Count == 0)
+		{
+			playerHealth -= (enemy.GetComponent<Monster>().Damage * Time.deltaTime);
+		}
+
+		if (playerHealth <= 0)
+			gameEnd = true;
+	}
+
+	private void ShowGameEnd()
+	{
+		if (!messageBox.activeSelf)
+		{
+			int bonusMin = (PlayerMonster.IndexEnemy+1) * 9;
+			int bonusMax = (PlayerMonster.IndexEnemy+1) * 12;
+
+			if (playerHealth <= 0)
+			{
+				bonusMin = (PlayerMonster.IndexEnemy+1) * 1;
+				bonusMax = (PlayerMonster.IndexEnemy+1) * 3;
+			}
+
+			int goldBonus = Random.Range(bonusMin, bonusMax);
+
+			PlayerCoin.Add(goldBonus);
+			GameObject gold = messageBox.transform.FindChild("GoldDisplay").gameObject;
+			gold.GetComponent<TextMesh>().text = "+" + goldBonus;
+
+			// Apply database
+			foreach(GameObject go in activeMonster)
+			{
+				PlayerMonster.Get(go.GetComponent<Monster>().StorageIndex).exp = 
+					go.GetComponent<Monster>().Exp;
+			}
+
+			switch(defeatedEnemy)
+			{
+			case 0:
+				PlayerField.Add(PlayerMonster.IndexEnemy, FieldStatus.FIELD_FAILED);
+				break;
+			case 1:
+				PlayerField.Add(PlayerMonster.IndexEnemy, FieldStatus.FIELD_1STAR);
+				break;
+			case 2:
+				PlayerField.Add(PlayerMonster.IndexEnemy, FieldStatus.FIELD_2STAR);
+				break;
+			case 3:
+				PlayerField.Add(PlayerMonster.IndexEnemy, FieldStatus.FIELD_3STAR);
+				break;
+			}
+
+			messageBox.SetActive(true);
+		}
+
+		GameObject title = messageBox.transform.FindChild("TextHelper").gameObject;
+
+		if (playerHealth > 0)
+		{
+			title.GetComponent<TextMesh>().text = "Victory";
+			title.GetComponent<TextMesh>().color = new Color(255,226,0);
+		}
+		else
+		{
+			title.GetComponent<TextMesh>().text = "Defeated";
+			title.GetComponent<TextMesh>().color = new Color(233,0,0);
+		}
 	}
 }
