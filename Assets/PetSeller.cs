@@ -20,6 +20,7 @@ public class PetSeller : MonoBehaviour
 	private GameObject nextButton;
 
 	private int currentPage = 0;
+	private int maxPage = 0;
 
 	// Use this for initialization
 	void Start () 
@@ -84,6 +85,7 @@ public class PetSeller : MonoBehaviour
 	private void ShowList()
 	{
 		Vector3 offset = new Vector3(-1.38f, 0.77f);
+		maxPage = Mathf.CeilToInt(Reference.Asset.monsterTemplate.Count/3.0f);
 		for (int i = 0 ; i < Reference.Asset.monsterTemplate.Count ; i++)
 		{
 			int page = i/3;
@@ -156,11 +158,19 @@ public class PetSeller : MonoBehaviour
 
 	public void Previous()
 	{
-		this.transform.Translate(new Vector3(6,0,0));
+		if (currentPage != 0)
+		{
+			this.transform.Translate(new Vector3(6,0,0));
+			currentPage--;
+		}
 	}
 
 	public void Next()
 	{
-		this.transform.Translate(new Vector3(-6,0,0));
+		if (currentPage != maxPage-1)
+		{
+			this.transform.Translate(new Vector3(-6,0,0));
+			currentPage++;
+		}
 	}
 }

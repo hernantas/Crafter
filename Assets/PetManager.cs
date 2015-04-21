@@ -20,6 +20,10 @@ public class PetManager : MonoBehaviour
 	private GameObject listCollider = null;
 	private List<GameObject> colliderList = new List<GameObject>();
 	private List<GameObject> petList = new List<GameObject>();
+
+	private int currentPage = 0;
+	private int maxPage = 0;
+
 	// Use this for initialization
 	void Start () 
 	{
@@ -74,6 +78,7 @@ public class PetManager : MonoBehaviour
 
 		Vector3 offset = new Vector3(-1.38f, 0.77f);
 
+		maxPage = Mathf.CeilToInt(PlayerMonster.Count/3.0f);
 		for (int i = 0 ; i < PlayerMonster.Count ; i++)
 		{
 			int page = i/3;
@@ -161,11 +166,19 @@ public class PetManager : MonoBehaviour
 
 	private void Previous()
 	{
-		this.transform.Translate(new Vector3(6,0,0));
+		if (currentPage != 0)
+		{
+			this.transform.Translate(new Vector3(6,0,0));
+			currentPage--;
+		}
 	}
 
 	private void Next()
 	{
-		this.transform.Translate(new Vector3(-6,0,0));
+		if (currentPage != maxPage-1)
+		{
+			this.transform.Translate(new Vector3(-6,0,0));
+			currentPage++;
+		}
 	}
 }
