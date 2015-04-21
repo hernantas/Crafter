@@ -13,6 +13,7 @@ public class Duel : MonoBehaviour
 {
 	private bool gameEnd = false;
 	private int defeatedEnemy = 0;
+	private GameObject enemyMoving = null;
 	private GameObject enemy = null;
 	[SerializeField]
 	private float health = 0;
@@ -26,6 +27,8 @@ public class Duel : MonoBehaviour
 	private GameObject textTemplate = null;
 	[SerializeField]
 	private GameObject messageBox = null;
+	[SerializeField]
+	private GameObject hpDisplay = null;
 
 	[SerializeField]
 	private GameObject greenBar = null;
@@ -88,7 +91,7 @@ public class Duel : MonoBehaviour
 		if (movingList.Count == 0)
 			damageCounter = 0;
 
-		if (HealthRoutine())
+		if (EnemyApproach() && HealthRoutine())
 		{
 			MoveToFill();
 			FillEmpty();
@@ -302,6 +305,8 @@ public class Duel : MonoBehaviour
 
 	private bool HealthRoutine()
 	{
+		hpDisplay.GetComponent<TextMesh>().text = ((int)playerHealth).ToString();
+
 		if (movingList.Count > 0)
 			return false;
 
@@ -311,12 +316,13 @@ public class Duel : MonoBehaviour
 		if (enemy == null)
 		{
 			int indexRandom = PlayerMonster.IndexEnemy+defeatedEnemy;
-			enemy = (GameObject) Instantiate(Reference.Asset.monsterTemplate[indexRandom],
-			                                 new Vector3(0,4,0),
+			enemyMoving = (GameObject) Instantiate(Reference.Asset.monsterTemplate[indexRandom],
+			                                 new Vector3(3,4,0),
 			                                 Quaternion.identity);
-			enemy.transform.localScale = new Vector3 (0.3f, 0.3f);
-			health += enemy.GetComponent<Monster>().MaxHealth * (3+PlayerMonster.IndexEnemy);
-			maxHealth = enemy.GetComponent<Monster>().MaxHealth * (3+PlayerMonster.IndexEnemy);
+			enemyMoving.GetComponent<SpriteRenderer>().sortingOrder = 1;
+			enemyMoving.transform.localScale = new Vector3 (0.3f, 0.3f);
+			health += enemyMoving.GetComponent<Monster>().MaxHealth * (3+PlayerMonster.IndexEnemy);
+			maxHealth = enemyMoving.GetComponent<Monster>().MaxHealth * (3+PlayerMonster.IndexEnemy);
 		}
 		else
 		{
@@ -389,7 +395,7 @@ public class Duel : MonoBehaviour
 
 		if (playerBarManager == null)
 		{
-			playerBarManager = (GameObject) Instantiate( redBar,
+			playerBarManager = (GameObject) Instantiate( yellowBar,
 			                                            new Vector3 (0,1.161f,0),
 			                                            Quaternion.Euler(new Vector3(0,0,90)));
 			playerBarManager.GetComponent<SpriteRenderer>().sortingOrder = 10;
@@ -437,13 +443,19 @@ public class Duel : MonoBehaviour
 			switch(defeatedEnemy)
 			{
 			case 0:
+				if (PlayerField.Get(PlayerMonster.IndexEnemy) != FieldStatus.FIELD_3STAR &&
+				    PlayerField.Get(PlayerMonster.IndexEnemy) != FieldStatus.FIELD_2STAR &&
+				    PlayerField.Get(PlayerMonster.IndexEnemy) != FieldStatus.FIELD_1STAR)
 				PlayerField.Add(PlayerMonster.IndexEnemy, FieldStatus.FIELD_FAILED);
 				break;
 			case 1:
-				PlayerField.Add(PlayerMonster.IndexEnemy, FieldStatus.FIELD_1STAR);
+				if (PlayerField.Get(PlayerMonster.IndexEnemy) != FieldStatus.FIELD_3STAR &&
+				    PlayerField.Get(PlayerMonster.IndexEnemy) != FieldStatus.FIELD_2STAR)
+					PlayerField.Add(PlayerMonster.IndexEnemy, FieldStatus.FIELD_1STAR);
 				break;
 			case 2:
-				PlayerField.Add(PlayerMonster.IndexEnemy, FieldStatus.FIELD_2STAR);
+				if (PlayerField.Get(PlayerMonster.IndexEnemy) != FieldStatus.FIELD_3STAR)
+					PlayerField.Add(PlayerMonster.IndexEnemy, FieldStatus.FIELD_2STAR);
 				break;
 			case 3:
 				PlayerField.Add(PlayerMonster.IndexEnemy, FieldStatus.FIELD_3STAR);
@@ -465,5 +477,29 @@ public class Duel : MonoBehaviour
 			title.GetComponent<TextMesh>().text = "Defeated";
 			title.GetComponent<TextMesh>().color = new Color(233,0,0);
 		}
+	}
+
+	private bool EnemyApproach()
+	{
+		if (enemyMoving != null)
+		{
+			Vector3 targetPos = new Vector3(0,4,0);
+			float distance = Vector3.Distance(enemyMoving.transform.position, targetPos);
+
+			if (distance > 0.05f)
+			{
+				Vector3 direction = targetPos - enemyMoving.transform.position;
+				enemyMoving.transform.Translate(direction.normalized * Time.deltaTime);
+			}
+			else
+			{
+				enemy = enemyMoving;
+				enemyMoving = null;
+			}
+
+			return false;
+		}
+
+		return true;
 	}
 }
