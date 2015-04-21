@@ -275,13 +275,14 @@ public class Duel : MonoBehaviour
 		{
 			Vector3 targetPos = new Vector3(0,4,0);
 			float distance = Vector3.Distance(targetPos, movingList[i].transform.position);
+			float speed = 8 * Time.deltaTime;
 
-			if (distance > 0.05f)
+			if (distance > speed)
 			{
 				Vector3 direction = targetPos - movingList[i].transform.position;
 				direction.Normalize();
 
-				movingList[i].transform.Translate(direction * 5 * Time.deltaTime);
+				movingList[i].transform.Translate(direction * speed);
 			}
 			else
 			{
