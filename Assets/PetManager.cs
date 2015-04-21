@@ -70,6 +70,8 @@ public class PetManager : MonoBehaviour
 
 	public void RefreshDisplay()
 	{
+		int oldPage = currentPage;
+		currentPage = 0;
 		for (int i=0;i<this.transform.childCount;i++)
 		{
 			Destroy(this.transform.GetChild(i).gameObject);
@@ -129,6 +131,13 @@ public class PetManager : MonoBehaviour
 			
 			petList.Add(go);
 		}
+
+		for (int i=0;i<oldPage;i++)
+		{
+			Next();
+		}
+
+		RefreshButtonPrevNext();
 	}
 
 	public void ShowText(Sprite icon, string text, Vector3 pos)
