@@ -9,6 +9,8 @@ public class PetSeller : MonoBehaviour
 	[SerializeField]
 	private Sprite goldTemplate;
 	[SerializeField]
+	private Sprite buyButton;
+	[SerializeField]
 	private Sprite healthTemplate;
 	[SerializeField]
 	private Sprite damageTemplate;
@@ -126,10 +128,14 @@ public class PetSeller : MonoBehaviour
 			         new Vector3(0,-i%3*2.20f,0)+offset+textOffset);
 			
 			// Create Icon Gold
-			textOffset = new Vector3(2.98f,-0.7f,0);
-
+			textOffset = new Vector3(2.58f,-0.7f,0);
 			ShowText(goldTemplate, 
-			         go.GetComponent<Monster>().Cost.ToString(), 
+			         (go.GetComponent<Monster>().Level * go.GetComponent<Monster>().Cost / 10).ToString(), 
+			         new Vector3(0,-i%3*2.20f,0)+offset+textOffset);
+			
+			textOffset = new Vector3(3.6f,-0.7f,0);
+			ShowText(buyButton, 
+			         "", 
 			         new Vector3(0,-i%3*2.20f,0)+offset+textOffset);
 			
 			petList.Add(go);
@@ -138,24 +144,38 @@ public class PetSeller : MonoBehaviour
 
 	public void ShowText(Sprite icon, string text, Vector3 pos)
 	{
-		GameObject iconGold = new GameObject("goldIcon");
-		iconGold.AddComponent<SpriteRenderer>();
-		iconGold.GetComponent<SpriteRenderer>().sprite = icon;
-		iconGold.GetComponent<SpriteRenderer>().sortingOrder = 1;
-		iconGold.transform.position = pos;
-		iconGold.transform.localScale = new Vector3(0.4f, 0.4f);
-		iconGold.transform.parent = this.transform;
-
-		pos += new Vector3(0.15f, 0.15f);
-		GameObject textGold = (GameObject) Instantiate(Reference.Asset.textUtility,
-		                                               pos,
-		                                               Quaternion.identity);
-		textGold.GetComponent<TextMesh>().text = text;
-		textGold.GetComponent<TextMesh>().color = new Color(0,0,0);
-		textGold.transform.parent = this.transform;
-		textGold.transform.position = new Vector3(textGold.transform.position.x,
-		                                          textGold.transform.position.y,
-		                                          -5);
+		GameObject iconGold = null;
+		if (icon != null)
+		{
+			iconGold = new GameObject("Text:" + text);
+			iconGold.AddComponent<SpriteRenderer>();
+			iconGold.GetComponent<SpriteRenderer>().sprite = icon;
+			iconGold.GetComponent<SpriteRenderer>().sortingOrder = 1;
+			iconGold.transform.position = pos;
+			iconGold.transform.localScale = new Vector3(0.4f, 0.4f);
+			iconGold.transform.parent = this.transform;
+		}
+		
+		if (text != "")
+		{
+			pos += new Vector3(0.15f, 0.15f);
+			GameObject textGold = (GameObject) Instantiate(Reference.Asset.textUtility,
+			                                               pos,
+			                                               Quaternion.identity);
+			textGold.GetComponent<TextMesh>().text = text;
+			textGold.GetComponent<TextMesh>().color = new Color(0,0,0);
+			textGold.transform.parent = this.transform;
+			textGold.transform.position = new Vector3(textGold.transform.position.x,
+			                                          textGold.transform.position.y,
+			                                          -5);
+		}
+		else
+		{
+			if (iconGold != null)
+			{
+				iconGold.transform.localScale = new Vector3(0.65f,0.65f,1);
+			}
+		}
 	}
 
 	public void Previous()
