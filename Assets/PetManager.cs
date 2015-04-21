@@ -28,6 +28,7 @@ public class PetManager : MonoBehaviour
 	void Start () 
 	{
 		RefreshDisplay();
+		RefreshButtonPrevNext();
 	}
 	
 	// Update is called once per frame
@@ -171,6 +172,8 @@ public class PetManager : MonoBehaviour
 			this.transform.Translate(new Vector3(6,0,0));
 			currentPage--;
 		}
+
+		RefreshButtonPrevNext();
 	}
 
 	private void Next()
@@ -180,5 +183,20 @@ public class PetManager : MonoBehaviour
 			this.transform.Translate(new Vector3(-6,0,0));
 			currentPage++;
 		}
+
+		RefreshButtonPrevNext();
+	}
+
+	private void RefreshButtonPrevNext()
+	{
+		if (currentPage == 0)
+			prevButton.GetComponent<SpriteRenderer>().color = new Color(1,1,1, 0.5f);
+		else
+			prevButton.GetComponent<SpriteRenderer>().color = new Color(1,1,1, 1);
+		
+		if (currentPage == maxPage-1)
+			nextButton.GetComponent<SpriteRenderer>().color = new Color(1,1,1, 0.5f);
+		else
+			nextButton.GetComponent<SpriteRenderer>().color = new Color(1,1,1, 1);
 	}
 }
