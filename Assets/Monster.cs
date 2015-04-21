@@ -59,10 +59,12 @@ public class Monster : MonoBehaviour
 	[SerializeField]
 	private Attr maxHealth;
 	public float MaxHealth { get { return maxHealth.Get(Level-1); } }
+	public float MaxHealthInc { get { return maxHealth.Increase; } }
 
 	[SerializeField]
 	private Attr damage;
 	public float Damage { get { return damage.Get(Level-1); } }
+	public float DamageInc { get { return damage.Increase; } }
 
 	[SerializeField]
 	private int cost = 0;

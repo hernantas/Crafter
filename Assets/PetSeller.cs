@@ -119,12 +119,14 @@ public class PetSeller : MonoBehaviour
 
 			textOffset = new Vector3(1.3f,0f,0);
 			ShowText(healthTemplate, 
-			         go.GetComponent<Monster>().MaxHealth.ToString(), 
+			         go.GetComponent<Monster>().MaxHealth + 
+			         " (+" + go.GetComponent<Monster>().MaxHealthInc + ")", 
 			         new Vector3(0,-i%3*2.20f,0)+offset+textOffset);
 
 			textOffset = new Vector3(1.3f,-0.55f,0);
 			ShowText(damageTemplate, 
-			         go.GetComponent<Monster>().Damage.ToString(), 
+			         go.GetComponent<Monster>().Damage + 
+			         " (+" + go.GetComponent<Monster>().DamageInc + ")", 
 			         new Vector3(0,-i%3*2.20f,0)+offset+textOffset);
 			
 			// Create Icon Gold
