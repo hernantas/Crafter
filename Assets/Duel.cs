@@ -42,6 +42,8 @@ public class Duel : MonoBehaviour
 	private GameObject playerBarManager = null;
 
 	private int damageCounter = 0;
+	private float damageBuffer = 0;
+	private float damageTimer = 0;
 
 	private List<List<GridInfo>> managedGrid = new List<List<GridInfo>>();
 	private List<GameObject> activeMonster = new List<GameObject>();
@@ -116,6 +118,7 @@ public class Duel : MonoBehaviour
 		ShowBlackBar(runBattle);
 
 		ShowHealthBar();
+		DamageBufferAction();
 		MovingGrid();
 
 		if (gameEnd)
@@ -288,19 +291,7 @@ public class Duel : MonoBehaviour
 				ori.GetComponent<Monster>().Exp += 1;
 				float damage = ori.GetComponent<Monster>().Damage * (1+(damageCounter/5.0f));
 				health -= damage;
-
-				float dirRandom = Random.Range(-0.5f,0.5f);
-				Vector3 targetOffsetPos = new Vector3(dirRandom,0);
-				GameObject text = (GameObject) Instantiate(textTemplate,
-				                                           targetPos+targetOffsetPos,
-				                                           Quaternion.identity);
-				text.GetComponent<TextMesh>().text = "-" + ((int)damage).ToString();
-				text.GetComponent<TextMesh>().color = new Color(0.75f,0,0f);
-				text.GetComponent<TextMesh>().offsetZ = -1f;
-				text.GetComponent<TextMesh>().fontSize = 24;
-				text.AddComponent<Lifetime>();
-				text.GetComponent<Lifetime>().LifeTime = 1f;
-				text.GetComponent<Lifetime>().FloatDirection = new Vector2(dirRandom, 0.5f);
+				damageBuffer += damage;
 
 				Destroy(movingList[i]);
 				movingList.RemoveAt(i);
@@ -312,9 +303,6 @@ public class Duel : MonoBehaviour
 	private bool HealthRoutine()
 	{
 		hpDisplay.GetComponent<TextMesh>().text = ((int)playerHealth).ToString();
-
-		if (movingList.Count > 0)
-			return false;
 
 		if (gameEnd)
 			return false;
@@ -489,6 +477,7 @@ public class Duel : MonoBehaviour
 	{
 		if (enemyMoving != null)
 		{
+			ClearMark();
 			Vector3 targetPos = new Vector3(0,4,0);
 			float distance = Vector3.Distance(enemyMoving.transform.position, targetPos);
 
@@ -512,5 +501,34 @@ public class Duel : MonoBehaviour
 	public void ShowBlackBar(bool b)
 	{
 		blackBar.SetActive(!b);
+	}
+
+	private void DamageBufferAction()
+	{
+		if (damageTimer > 0.1f)
+		{
+			if (damageBuffer > 0)
+			{
+				Vector3 targetPos = new Vector3(0,4,0);
+				float dirRandom = Random.Range(-0.5f,0.5f);
+				Vector3 targetOffsetPos = new Vector3(dirRandom,0);
+				GameObject text = (GameObject) Instantiate(textTemplate,
+				                                           targetPos+targetOffsetPos,
+				                                           Quaternion.identity);
+				text.GetComponent<TextMesh>().text = "-" + ((int)damageBuffer).ToString();
+				text.GetComponent<TextMesh>().color = new Color(0.75f,0,0f);
+				text.GetComponent<TextMesh>().offsetZ = -1f;
+				text.GetComponent<TextMesh>().fontSize = 24;
+				text.AddComponent<Lifetime>();
+				text.GetComponent<Lifetime>().LifeTime = 1.2f;
+				text.GetComponent<Lifetime>().FloatDirection = new Vector2(dirRandom, 0.5f);
+
+				damageBuffer = 0;
+			}
+
+			damageTimer = 0;
+		}
+
+		damageTimer += Time.deltaTime;
 	}
 }
