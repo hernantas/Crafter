@@ -130,7 +130,7 @@ public class PetSeller : MonoBehaviour
 			// Create Icon Gold
 			textOffset = new Vector3(2.58f,-0.7f,0);
 			ShowText(goldTemplate, 
-			         (go.GetComponent<Monster>().Level * go.GetComponent<Monster>().Cost / 10).ToString(), 
+			         (go.GetComponent<Monster>().Level * go.GetComponent<Monster>().Cost).ToString(), 
 			         new Vector3(0,-i%3*2.20f,0)+offset+textOffset);
 			
 			textOffset = new Vector3(3.6f,-0.7f,0);
