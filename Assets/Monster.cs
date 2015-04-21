@@ -39,12 +39,21 @@ public class Monster : MonoBehaviour
 		set { exp = value; } 
 		get { return exp; }
 	}
-	private const int baseExp = 50;
+	private const int baseExp = 25;
 
 	public int Level
 	{
 		//set { exp = baseExp * (value-1); }
-		get { return (exp/baseExp)+1; }
+		get 
+		{ 
+			for (int i=1;true;i++)
+			{
+				if ((i*(i+1))/2 * baseExp > exp)
+				{
+					return i;
+				}
+			}
+		}
 	}
 
 	[SerializeField]
