@@ -29,6 +29,8 @@ public class Duel : MonoBehaviour
 	private GameObject messageBox = null;
 	[SerializeField]
 	private GameObject hpDisplay = null;
+	[SerializeField]
+	private GameObject blackBar = null;
 
 	[SerializeField]
 	private GameObject greenBar = null;
@@ -91,7 +93,9 @@ public class Duel : MonoBehaviour
 		if (movingList.Count == 0)
 			damageCounter = 0;
 
-		if (EnemyApproach() && HealthRoutine())
+		bool runBattle = EnemyApproach() && HealthRoutine();
+
+		if (runBattle)
 		{
 			MoveToFill();
 			FillEmpty();
@@ -108,6 +112,8 @@ public class Duel : MonoBehaviour
 				ClearMark();
 			}
 		}
+
+		ShowBlackBar(runBattle);
 
 		ShowHealthBar();
 		MovingGrid();
@@ -317,11 +323,11 @@ public class Duel : MonoBehaviour
 		{
 			int indexRandom = PlayerMonster.IndexEnemy+defeatedEnemy;
 			enemyMoving = (GameObject) Instantiate(Reference.Asset.monsterTemplate[indexRandom],
-			                                 new Vector3(3,4,0),
+			                                 new Vector3(3,4,-5),
 			                                 Quaternion.identity);
-			enemyMoving.GetComponent<SpriteRenderer>().sortingOrder = 1;
+
 			enemyMoving.transform.localScale = new Vector3 (0.3f, 0.3f);
-			health += enemyMoving.GetComponent<Monster>().MaxHealth * (3+PlayerMonster.IndexEnemy);
+			health = enemyMoving.GetComponent<Monster>().MaxHealth * (3+PlayerMonster.IndexEnemy);
 			maxHealth = enemyMoving.GetComponent<Monster>().MaxHealth * (3+PlayerMonster.IndexEnemy);
 		}
 		else
@@ -489,7 +495,7 @@ public class Duel : MonoBehaviour
 			if (distance > 0.05f)
 			{
 				Vector3 direction = targetPos - enemyMoving.transform.position;
-				enemyMoving.transform.Translate(direction.normalized * Time.deltaTime);
+				enemyMoving.transform.Translate(direction.normalized * 5 * Time.deltaTime);
 			}
 			else
 			{
@@ -501,5 +507,10 @@ public class Duel : MonoBehaviour
 		}
 
 		return true;
+	}
+
+	public void ShowBlackBar(bool b)
+	{
+		blackBar.SetActive(!b);
 	}
 }
