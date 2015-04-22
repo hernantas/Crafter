@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class ItemShop : MonoBehaviour 
 {
+	private List<GameObject> itemList = new List<GameObject>();
 	private List<GameObject> colliderList = new List<GameObject>();
 	[SerializeField]
 	private GameObject colliderTemplate = null; 
@@ -17,7 +18,26 @@ public class ItemShop : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
-	
+		if (Input.GetMouseButtonUp(0))
+		{
+			RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), 
+			                                     Vector2.zero);
+
+			if (hit.transform != null)
+			{
+				for (int i=0; i<colliderList.Count; i++)
+				{
+					if (hit.transform.gameObject == colliderList[i].gameObject)
+					{
+						if (PlayerCoin.Get() >= itemList[i].GetComponent<Item>().Cost)
+						{
+							PlayerCoin.Spend(itemList[i].GetComponent<Item>().Cost);
+							PlayerItems.Add(itemList[i].name, 1);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	public void DisplayItem()
@@ -34,6 +54,7 @@ public class ItemShop : MonoBehaviour
 			                                           Quaternion.identity);
 			//item.transform.parent = this.transform;
 			item.GetComponent<SpriteRenderer>().sortingOrder = 1;
+			item.name = templates[i].name;
 
 			GameObject cost = (GameObject) Instantiate(Reference.Asset.textUtility,
 			                                           new Vector3(i%6,-i/6,-2)+textOffset,
@@ -46,6 +67,7 @@ public class ItemShop : MonoBehaviour
 			                                               new Vector3(i%6,-i/6,0)+offset,
 			                                               Quaternion.identity);
 
+			itemList.Add(item);
 			colliderList.Add(collider);
 		}
 
