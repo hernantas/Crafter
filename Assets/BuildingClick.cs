@@ -20,7 +20,7 @@ public class BuildingClick : MonoBehaviour
 
 			if (hit.transform != null && hit.transform.gameObject == this.gameObject)
 			{
-				Debug.Log("Unknow building " + this.name);
+				//Debug.Log("Unknow building " + this.name);
 
 				if (this.name == "cityhall3")
 				{
@@ -36,6 +36,10 @@ public class BuildingClick : MonoBehaviour
 					{
 						Debug.Log("You must buy pet first");
 					}
+				}
+				else if (this.name == "blacksmith")
+				{
+					Application.LoadLevel(5);
 				}
 				else if (this.name == "petshop")
 				{

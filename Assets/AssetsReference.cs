@@ -6,6 +6,7 @@ public class AssetsReference : MonoBehaviour
 {
 	public GUIStyle textStyle = new GUIStyle();
 	public List<GameObject> monsterTemplate = new List<GameObject>();
+	public List<GameObject> itemTemplate = new List<GameObject>();
 	public GameObject textUtility;
 
 	void Start()
