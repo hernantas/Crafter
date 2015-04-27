@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 
 /*
@@ -42,6 +43,10 @@ public static class PlayerSave
 			{
 				PlayerMonster.Add(exp[1], int.Parse(exp[2]));
 			}
+			else if (exp[0] == "item")
+			{
+				PlayerItems.Add(exp[1], int.Parse(exp[2]));
+			}
 			else if (exp[0] == "field")
 			{
 				if (exp[2] == "0")
@@ -71,6 +76,11 @@ public static class PlayerSave
 		for (int i=0;i<PlayerMonster.Count;i++)
 		{
 			file.WriteLine("monster;" + PlayerMonster.Get(i).monsterName + ";"+PlayerMonster.Get(i).exp);
+		}
+
+		foreach (KeyValuePair<string, int> pair in PlayerItems.Items)
+		{
+			file.WriteLine("item;" + pair.Key + ";"+pair.Value);
 		}
 
 		for (int i=0;PlayerField.Has(i);i++)
