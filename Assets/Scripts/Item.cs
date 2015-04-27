@@ -13,6 +13,10 @@ public class Item : MonoBehaviour
 {
 	[SerializeField]
 	private ItemEffect effect = new ItemEffect();
+	public ItemEffect Effect
+	{
+		get	{ return effect; }
+	}
 
 	[SerializeField]
 	private float value;
@@ -27,6 +31,10 @@ public class Item : MonoBehaviour
 	{
 		get { return duration; }
 	}
+	public void SpendDuration(float t)
+	{
+		duration -= t;
+	}
 
 	[SerializeField]
 	private int cost = 0;
@@ -34,5 +42,13 @@ public class Item : MonoBehaviour
 	{
 		set { cost = value; }
 		get { return cost; }
+	}
+
+	[SerializeField]
+	private int dropWeight = 0;
+	public int DropWeight
+	{
+		set { dropWeight = value; }
+		get { return dropWeight; }
 	}
 }
