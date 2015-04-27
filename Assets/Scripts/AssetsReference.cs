@@ -7,6 +7,18 @@ public class AssetsReference : MonoBehaviour
 	public GUIStyle textStyle = new GUIStyle();
 	public List<GameObject> monsterTemplate = new List<GameObject>();
 	public List<GameObject> itemTemplate = new List<GameObject>();
+	public int ItemWeight
+	{
+		get
+		{
+			int maxWeight = 0;
+			foreach(GameObject item in itemTemplate)
+			{
+				maxWeight += item.GetComponent<Item>().DropWeight;
+			}
+			return maxWeight;
+		}
+	}
 	public GameObject textUtility;
 
 	void Start()
