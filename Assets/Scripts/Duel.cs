@@ -44,6 +44,12 @@ public class Duel : MonoBehaviour
 	private int damageCounter = 0;
 	private float damageBuffer = 0;
 	private float damageTimer = 0;
+	private float damageAmp = 0;
+	public float DamageAmp
+	{
+		set { damageAmp = value; }
+		get { return damageAmp; }
+	}
 
 	private List<List<GridInfo>> managedGrid = new List<List<GridInfo>>();
 	private List<GameObject> activeMonster = new List<GameObject>();
@@ -65,6 +71,7 @@ public class Duel : MonoBehaviour
 				                                        new Vector3(col*0.86f,-row*0.86f,0)+gridOffset,
 				                                        Quaternion.Euler(0,0,45f));
 				go.transform.localScale = new Vector3(0.6f, 0.6f);
+				go.transform.parent = this.transform;
 
 				GridInfo gi = new GridInfo();
 				gi.gridObject = null;
@@ -291,8 +298,8 @@ public class Duel : MonoBehaviour
 				GameObject ori = movingList[i].GetComponent<Monster>().Original;
 				ori.GetComponent<Monster>().Exp += 1;
 				float damage = ori.GetComponent<Monster>().Damage * (1+(damageCounter/5.0f));
-				health -= damage;
-				damageBuffer += damage;
+				health -= (1 + damageAmp) * damage;
+				damageBuffer += (1 + damageAmp) * damage;
 
 				Destroy(movingList[i]);
 				movingList.RemoveAt(i);
@@ -435,6 +442,28 @@ public class Duel : MonoBehaviour
 					go.GetComponent<Monster>().Exp;
 			}
 
+			List<GameObject> dropItem = new List<GameObject>();
+			foreach(GameObject item in Reference.Asset.itemTemplate)
+			{
+				int rand = Random.Range(0, 100);
+
+				if (rand <= item.GetComponent<Item>().DropWeight)
+				{
+					PlayerItems.Add(item.name, 1);
+					dropItem.Add(item);
+				}
+			}
+
+			int count = 0;
+			foreach(GameObject go in dropItem)
+			{
+				GameObject item = (GameObject) Instantiate(go,
+				                                           new Vector3(count,0,0),
+				                                           Quaternion.identity);
+				item.GetComponent<SpriteRenderer>().sortingOrder = 2;
+				count++;
+			}
+
 			switch(defeatedEnemy)
 			{
 			case 0:
@@ -531,5 +560,15 @@ public class Duel : MonoBehaviour
 		}
 
 		damageTimer += Time.deltaTime;
+	}
+
+	public void AddHealth(float f)
+	{
+		playerHealth += f;
+	}
+
+	public void Damage(float f)
+	{
+		health -= f;
 	}
 }
