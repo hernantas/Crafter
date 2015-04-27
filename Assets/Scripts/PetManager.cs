@@ -5,6 +5,8 @@ using System.Collections.Generic;
 public class PetManager : MonoBehaviour 
 {
 	[SerializeField]
+	private Sprite usedTemplate = null;
+	[SerializeField]
 	private Sprite healthTemplate = null;
 	[SerializeField]
 	private Sprite damageTemplate = null;
@@ -98,6 +100,16 @@ public class PetManager : MonoBehaviour
 			                                               Quaternion.identity);
 			collider.transform.parent = this.transform;
 			colliderList.Add(collider);
+
+			if (i<3)
+			{
+				GameObject usedText = new GameObject("usedText");
+				usedText.AddComponent<SpriteRenderer>();
+				usedText.GetComponent<SpriteRenderer>().sprite = usedTemplate;
+				usedText.GetComponent<SpriteRenderer>().sortingOrder = 2;
+				usedText.transform.position = new Vector3(-1,1+(-i%3*2.20f),0) + offset;
+				usedText.transform.parent = this.transform;
+			}
 			
 			Vector3 textOffset = new Vector3(1.25f,0.55f,0);
 			GameObject text = (GameObject) Instantiate(Reference.Asset.textUtility,
