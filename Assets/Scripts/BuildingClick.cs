@@ -41,6 +41,10 @@ public class BuildingClick : MonoBehaviour
 				{
 					Application.LoadLevel(5);
 				}
+				else if (this.name == "farm")
+				{
+					Application.LoadLevel(6);
+				}
 				else if (this.name == "petshop")
 				{
 					Application.LoadLevel(2);
